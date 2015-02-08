@@ -25,7 +25,7 @@ import android.net.Uri;
 
 public class WeatherProvider extends ContentProvider {
 
-    //The URI matcher used by this content provider
+    // The URI Matcher used by this content provider.
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     private WeatherDbHelper mOpenHelper;
 
@@ -56,6 +56,11 @@ public class WeatherProvider extends ContentProvider {
                     "." + WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ? AND " +
                     WeatherContract.WeatherEntry.COLUMN_DATETEXT + " >= ? ";
 
+    private static final String sLocationSettingAndDaySelection =
+            WeatherContract.LocationEntry.TABLE_NAME +
+                    "." + WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ? AND " +
+                    WeatherContract.WeatherEntry.COLUMN_DATETEXT + " = ? ";
+
     private Cursor getWeatherByLocationSetting(Uri uri, String[] projection, String sortOrder) {
         String locationSetting = WeatherContract.WeatherEntry.getLocationSettingFromUri(uri);
         String startDate = WeatherContract.WeatherEntry.getStartDateFromUri(uri);
@@ -75,6 +80,21 @@ public class WeatherProvider extends ContentProvider {
                 projection,
                 selection,
                 selectionArgs,
+                null,
+                null,
+                sortOrder
+        );
+    }
+
+    private Cursor getWeatherByLocationSettingAndDate(
+            Uri uri, String[] projection, String sortOrder) {
+        String locationSetting = WeatherContract.WeatherEntry.getLocationSettingFromUri(uri);
+        String date = WeatherContract.WeatherEntry.getDateFromUri(uri);
+
+        return sWeatherByLocationSettingQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+                projection,
+                sLocationSettingAndDaySelection,
+                new String[]{locationSetting, date},
                 null,
                 null,
                 sortOrder
@@ -102,13 +122,11 @@ public class WeatherProvider extends ContentProvider {
         return matcher;
     }
 
-
     @Override
     public boolean onCreate() {
         mOpenHelper = new WeatherDbHelper(getContext());
         return true;
     }
-
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
@@ -120,7 +138,7 @@ public class WeatherProvider extends ContentProvider {
             // "weather/*/*"
             case WEATHER_WITH_LOCATION_AND_DATE:
             {
-                retCursor = null;
+                retCursor = getWeatherByLocationSettingAndDate(uri, projection, sortOrder);
                 break;
             }
             // "weather/*"
@@ -144,27 +162,27 @@ public class WeatherProvider extends ContentProvider {
             // "location/*"
             case LOCATION_ID: {
                 retCursor = mOpenHelper.getReadableDatabase().query(
-                                                WeatherContract.LocationEntry.TABLE_NAME,
-                                                projection,
-                                                WeatherContract.LocationEntry._ID + " = '" + ContentUris.parseId(uri) + "'",
-                                                null,
-                                                null,
-                                                null,
-                                                sortOrder
-                                        );
+                        WeatherContract.LocationEntry.TABLE_NAME,
+                        projection,
+                        WeatherContract.LocationEntry._ID + " = '" + ContentUris.parseId(uri) + "'",
+                        null,
+                        null,
+                        null,
+                        sortOrder
+                );
                 break;
             }
             // "location"
             case LOCATION: {
                 retCursor = mOpenHelper.getReadableDatabase().query(
-                                                WeatherContract.LocationEntry.TABLE_NAME,
-                                                projection,
-                                                selection,
-                                               selectionArgs,
-                                                null,
-                                                null,
-                                                sortOrder
-                                                );
+                        WeatherContract.LocationEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
                 break;
             }
 
@@ -175,9 +193,9 @@ public class WeatherProvider extends ContentProvider {
         return retCursor;
     }
 
-
     @Override
     public String getType(Uri uri) {
+
         // Use the Uri Matcher to determine what kind of URI this is.
         final int match = sUriMatcher.match(uri);
 

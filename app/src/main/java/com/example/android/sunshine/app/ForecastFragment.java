@@ -115,7 +115,7 @@ public class ForecastFragment extends Fragment implements LoaderCallbacks<Cursor
                 new ArrayAdapter<String>(
                         getActivity(), // The current context (this activity)
                         R.layout.list_item_forecast, // The name of the layout ID.
-                        R.id.list_item_forecast_textview, // The ID of the textview to populate.
+                        R.id.list_item_forecasxt_textview, // The ID of the textview to populate.
                         new ArrayList<String>());
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
